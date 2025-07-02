@@ -24,12 +24,35 @@ interface RecaptchaResponse {
 
 const app: Express = express();
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN,
-  methods: ['POST', 'GET'],
-  allowedHeaders: ['Content-Type']
-}));
+// Configuración de CORS más flexible
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    if (!origin) return callback(null, true);
 
+    const allowedOrigins = [
+      process.env.CORS_ORIGIN
+    ].filter(Boolean); 
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('No permitido por CORS'), false);
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const dbConfig = {
@@ -64,6 +87,15 @@ const connectDB = async () => {
 };
 
 const db = await connectDB();
+
+// Ruta de prueba para verificar CORS
+app.get('/api/test-cors', (req: Request, res: Response) => {
+  res.json({ 
+    message: 'CORS funcionando correctamente',
+    origin: req.headers.origin || 'No origin',
+    timestamp: new Date().toISOString()
+  });
+});
 
 const contactSchema = Joi.object({
   fullName: Joi.string().min(3).required(),
