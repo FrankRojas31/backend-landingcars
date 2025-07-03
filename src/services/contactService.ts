@@ -284,7 +284,7 @@ export class ContactService {
       
       // Construir WHERE clause
       const whereConditions = ['c.assigned_to = ?'];
-      const whereValues = [userId];
+      const whereValues: (string | number)[] = [userId];
 
       if (status) {
         whereConditions.push('c.status = ?');

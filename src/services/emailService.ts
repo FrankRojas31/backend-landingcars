@@ -6,7 +6,7 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       host: config.EMAIL_HOST,
       port: config.EMAIL_PORT,
       secure: false, // true para 465, false para otros puertos

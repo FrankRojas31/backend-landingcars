@@ -57,7 +57,7 @@ export class SlackService {
               }
             ],
             footer: 'Titan Motors CRM',
-            ts: Math.floor(new Date().getTime() / 1000)
+            ts: Math.floor(new Date().getTime() / 1000).toString()
           }
         ]
       };
@@ -106,7 +106,7 @@ export class SlackService {
               }
             ],
             footer: 'Titan Motors CRM',
-            ts: Math.floor(new Date().getTime() / 1000)
+            ts: Math.floor(new Date().getTime() / 1000).toString()
           }
         ]
       };
@@ -154,7 +154,7 @@ export class SlackService {
               }
             ],
             footer: 'Titan Motors CRM',
-            ts: Math.floor(new Date().getTime() / 1000)
+            ts: Math.floor(new Date().getTime() / 1000).toString()
           }
         ]
       };

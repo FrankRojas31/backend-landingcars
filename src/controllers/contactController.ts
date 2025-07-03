@@ -97,6 +97,7 @@ export const getAllContacts = asyncHandler(async (req: Request, res: Response): 
 });
 
 export const getContactById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { contactService } = getServices();
   const contactId = parseInt(req.params.id || '0');
   
   if (!contactId) {
@@ -116,6 +117,7 @@ export const getContactById = asyncHandler(async (req: Request, res: Response): 
 });
 
 export const updateContact = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { contactService, slackService } = getServices();
   const contactId = parseInt(req.params.id || '0');
   
   if (!contactId) {
@@ -138,7 +140,7 @@ export const updateContact = asyncHandler(async (req: Request, res: Response): P
       updatedContact, 
       oldStatus, 
       req.user.username
-    ).catch(error => {
+    ).catch((error: Error) => {
       console.error('Error enviando notificación de estado:', error);
     });
   }
@@ -151,6 +153,7 @@ export const updateContact = asyncHandler(async (req: Request, res: Response): P
 });
 
 export const deleteContact = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { contactService } = getServices();
   const contactId = parseInt(req.params.id || '0');
   
   if (!contactId) {
@@ -178,6 +181,7 @@ export const deleteContact = asyncHandler(async (req: Request, res: Response): P
 });
 
 export const assignContact = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { contactService, slackService } = getServices();
   const contactId = parseInt(req.params.id || '0');
   const { assigned_to } = req.body;
   
@@ -197,7 +201,7 @@ export const assignContact = asyncHandler(async (req: Request, res: Response): P
       updatedContact,
       `Usuario ID: ${assigned_to}`, // En un caso real, obtendrías el nombre del usuario
       req.user.username
-    ).catch(error => {
+    ).catch((error: Error) => {
       console.error('Error enviando notificación de asignación:', error);
     });
   }
@@ -210,6 +214,7 @@ export const assignContact = asyncHandler(async (req: Request, res: Response): P
 });
 
 export const getMyContacts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { contactService } = getServices();
   if (!req.user?.id) {
     res.status(401).json({
       success: false,
@@ -234,6 +239,7 @@ export const getMyContacts = asyncHandler(async (req: Request, res: Response): P
 });
 
 export const getDashboardStats = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { contactService } = getServices();
   const stats = await contactService.getDashboardStats();
   
   res.status(200).json({
@@ -243,6 +249,7 @@ export const getDashboardStats = asyncHandler(async (req: Request, res: Response
 });
 
 export const sendFollowUpEmail = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { contactService, emailService } = getServices();
   const contactId = parseInt(req.params.id || '0');
   const { customMessage } = req.body;
   

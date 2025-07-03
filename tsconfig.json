@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
+    "module": "CommonJS",
     "lib": ["ES2022"],
     "moduleResolution": "node",
     "moduleDetection": "force",
-    "allowImportingTsExtensions": true,
+    "allowImportingTsExtensions": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "noEmit": true,
+    "noEmit": false,
     "skipLibCheck": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,

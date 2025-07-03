@@ -49,7 +49,7 @@ export class AuthService {
           role: user.role
         },
         config.JWT_SECRET,
-        { expiresIn: config.JWT_EXPIRES_IN }
+        { expiresIn: config.JWT_EXPIRES_IN } as jwt.SignOptions
       );
 
       // Excluir password_hash del usuario retornado
