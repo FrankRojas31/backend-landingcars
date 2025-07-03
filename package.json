@@ -9,10 +9,13 @@
     "dev-simple": "tsx watch src/index-simple.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:prod": "./start-production.sh",
     "setup-db": "node setup-db.mjs",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write src/**/*.ts",
+    "diagnose": "node diagnose.js",
+    "healthcheck": "node healthcheck.js"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

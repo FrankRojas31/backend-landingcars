@@ -1,0 +1,26 @@
+# Railway.app Configuration
+# Este archivo configura el despliegue en Railway
+
+# Configuración del build
+[build]
+  command = "npm run build"
+  
+# Configuración del inicio
+[start]
+  command = "npm start"
+
+# Variables de entorno requeridas (configurar en Railway Dashboard)
+[env]
+  NODE_ENV = "production"
+  DB_HOST = "required"
+  DB_USER = "required" 
+  DB_PASSWORD = "required"
+  DB_NAME = "required"
+  DB_PORT = "required"
+  JWT_SECRET = "required"
+  RECAPTCHA_SECRET = "optional"
+  CORS_ORIGIN = "required"
+
+# Configuración del puerto
+[port]
+  expose = true
