@@ -80,6 +80,29 @@ export class EmailService {
     }
   }
 
+  async sendPasswordResetEmail(email: string, username: string, resetToken: string): Promise<void> {
+    try {
+      if (!config.EMAIL_USER || !config.EMAIL_PASS) {
+        console.warn('Configuración de email no disponible, saltando envío');
+        return;
+      }
+
+      const resetUrl = `${config.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+      
+      const emailConfig: EmailConfig = {
+        to: email,
+        subject: 'Recuperación de contraseña - Titan Motors CRM',
+        html: this.generatePasswordResetEmailHTML(username, resetUrl, resetToken)
+      };
+
+      await this.sendEmail(emailConfig);
+      console.log(`✅ Email de recuperación de contraseña enviado a ${email}`);
+    } catch (error) {
+      console.error('❌ Error al enviar email de recuperación:', error);
+      throw new Error('Error al enviar email de recuperación de contraseña');
+    }
+  }
+
   private async sendEmail(emailConfig: EmailConfig): Promise<void> {
     const mailOptions = {
       from: `"Titan Motors" <${config.EMAIL_FROM}>`,
@@ -251,6 +274,132 @@ export class EmailService {
                 </div>
 
                 <p><em>Accede al CRM para gestionar este contacto y darle seguimiento.</em></p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+  }
+
+  private generatePasswordResetEmailHTML(username: string, resetUrl: string, token: string): string {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Recuperación de Contraseña - Titan Motors CRM</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+            .container {
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 2px solid #e74c3c;
+            }
+            .header h1 {
+                color: #e74c3c;
+                margin: 0;
+                font-size: 24px;
+            }
+            .content {
+                margin-bottom: 30px;
+            }
+            .reset-button {
+                display: inline-block;
+                background: #e74c3c;
+                color: white;
+                padding: 12px 30px;
+                text-decoration: none;
+                border-radius: 5px;
+                font-weight: bold;
+                margin: 20px 0;
+                text-align: center;
+            }
+            .reset-button:hover {
+                background: #c0392b;
+            }
+            .warning {
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 20px 0;
+            }
+            .token-box {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 20px 0;
+                word-break: break-all;
+                font-family: monospace;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+                color: #666;
+                font-size: 12px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🔒 Recuperación de Contraseña</h1>
+                <p>Titan Motors CRM</p>
+            </div>
+            <div class="content">
+                <p>Hola <strong>${username}</strong>,</p>
+                
+                <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en el CRM de Titan Motors.</p>
+                
+                <p>Para restablecer tu contraseña, haz clic en el siguiente enlace:</p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${resetUrl}" class="reset-button">Restablecer Contraseña</a>
+                </div>
+                
+                <div class="warning">
+                    <p><strong>⚠️ Importante:</strong></p>
+                    <ul>
+                        <li>Este enlace expira en <strong>1 hora</strong></li>
+                        <li>Solo puede ser usado una vez</li>
+                        <li>Si no solicitaste este cambio, ignora este correo</li>
+                    </ul>
+                </div>
+                
+                <p>Si tienes problemas con el enlace, puedes copiar y pegar el siguiente código de recuperación:</p>
+                
+                <div class="token-box">
+                    <strong>Código de recuperación:</strong><br>
+                    ${token}
+                </div>
+                
+                <p>Si no solicitaste este restablecimiento de contraseña, puedes ignorar este correo. Tu contraseña permanecerá sin cambios.</p>
+                
+                <p>Saludos,<br>
+                <strong>Equipo de Titan Motors CRM</strong></p>
+            </div>
+            <div class="footer">
+                <p>Este es un correo automático, por favor no responder.</p>
+                <p>© ${new Date().getFullYear()} Titan Motors CRM. Todos los derechos reservados.</p>
             </div>
         </div>
     </body>

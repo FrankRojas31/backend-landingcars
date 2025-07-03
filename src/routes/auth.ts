@@ -7,7 +7,10 @@ import {
   getAllUsers,
   getUserById,
   deleteUser,
-  logout
+  logout,
+  forgotPassword,
+  resetPassword,
+  validateResetToken
 } from '../controllers/authController.js';
 import { authenticateToken, requireAdmin, requireManagerOrAdmin } from '../middleware/auth.js';
 import { validateLogin, validateUser } from '../middleware/validation.js';
@@ -240,5 +243,85 @@ router.put('/users/:id', authenticateToken, requireManagerOrAdmin, updateUser);
  *         description: Usuario no encontrado
  */
 router.delete('/users/:id', authenticateToken, requireAdmin, deleteUser);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Solicitar recuperación de contraseña
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - identifier
+ *             properties:
+ *               identifier:
+ *                 type: string
+ *                 description: Nombre de usuario o email
+ *     responses:
+ *       200:
+ *         description: Correo de recuperación enviado (si el usuario existe)
+ *       400:
+ *         description: Datos inválidos
+ */
+router.post('/forgot-password', forgotPassword);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Restablecer contraseña con token
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Token de recuperación
+ *               newPassword:
+ *                 type: string
+ *                 description: Nueva contraseña (mínimo 8 caracteres)
+ *     responses:
+ *       200:
+ *         description: Contraseña restablecida exitosamente
+ *       400:
+ *         description: Token inválido o datos incorrectos
+ */
+router.post('/reset-password', resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/validate-reset-token/{token}:
+ *   get:
+ *     summary: Validar token de recuperación
+ *     tags: [Authentication]
+ *     security: []
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token de recuperación
+ *     responses:
+ *       200:
+ *         description: Token válido
+ *       400:
+ *         description: Token inválido o expirado
+ */
+router.get('/validate-reset-token/:token', validateResetToken);
 
 export default router;

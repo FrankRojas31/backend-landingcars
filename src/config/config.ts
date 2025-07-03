@@ -36,6 +36,9 @@ export const config = {
   EMAIL_PASS: process.env.EMAIL_PASS || '',
   EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@titanmotors.com',
   
+  // Frontend URL
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3001',
+  
   // Rate limiting
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutos
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || '100'), // 100 requests por ventana

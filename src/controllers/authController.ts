@@ -1,7 +1,13 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/authService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { LoginRequest, ApiResponse, User } from '../types/index.js';
+import { 
+  LoginRequest, 
+  ApiResponse, 
+  User, 
+  ForgotPasswordRequest, 
+  ResetPasswordRequest 
+} from '../types/index.js';
 
 export const login = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const authService = new AuthService();
@@ -163,4 +169,79 @@ export const logout = asyncHandler(async (req: Request, res: Response): Promise<
     success: true,
     message: 'Logout exitoso'
   } as ApiResponse);
+});
+
+export const forgotPassword = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const authService = new AuthService();
+  const { identifier }: ForgotPasswordRequest = req.body;
+  
+  if (!identifier) {
+    res.status(400).json({
+      success: false,
+      error: 'Se requiere un nombre de usuario o email'
+    } as ApiResponse);
+    return;
+  }
+
+  const result = await authService.forgotPassword({ identifier });
+  
+  // Siempre devolvemos 200 por seguridad (no revelar si el usuario existe)
+  res.status(200).json({
+    success: result.success,
+    message: result.message
+  } as ApiResponse);
+});
+
+export const resetPassword = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const authService = new AuthService();
+  const { token, newPassword }: ResetPasswordRequest = req.body;
+  
+  if (!token || !newPassword) {
+    res.status(400).json({
+      success: false,
+      error: 'Se requiere token y nueva contraseña'
+    } as ApiResponse);
+    return;
+  }
+
+  const result = await authService.resetPassword({ token, newPassword });
+  
+  if (result.success) {
+    res.status(200).json({
+      success: true,
+      message: result.message
+    } as ApiResponse);
+  } else {
+    res.status(400).json({
+      success: false,
+      error: result.message
+    } as ApiResponse);
+  }
+});
+
+export const validateResetToken = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const authService = new AuthService();
+  const { token } = req.params;
+  
+  if (!token) {
+    res.status(400).json({
+      success: false,
+      error: 'Se requiere token'
+    } as ApiResponse);
+    return;
+  }
+
+  const result = await authService.validateResetToken(token);
+  
+  if (result.valid) {
+    res.status(200).json({
+      success: true,
+      message: 'Token válido'
+    } as ApiResponse);
+  } else {
+    res.status(400).json({
+      success: false,
+      error: result.message
+    } as ApiResponse);
+  }
 });

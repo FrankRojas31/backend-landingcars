@@ -1,15 +1,28 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import mysql, { Pool, RowDataPacket, ResultSetHeader } from 'mysql2/promise';
+import crypto from 'crypto';
 import { getDB } from '../config/database.js';
 import { config } from '../config/config.js';
-import { User, LoginRequest, LoginResponse } from '../types/index.js';
+import { 
+  User, 
+  LoginRequest, 
+  LoginResponse, 
+  ForgotPasswordRequest, 
+  ForgotPasswordResponse, 
+  ResetPasswordRequest, 
+  ResetPasswordResponse,
+  PasswordResetToken 
+} from '../types/index.js';
+import { EmailService } from './emailService.js';
 
 export class AuthService {
   private db: Pool;
+  private emailService: EmailService;
 
   constructor() {
     this.db = getDB();
+    this.emailService = new EmailService();
   }
 
   async login(credentials: LoginRequest): Promise<LoginResponse> {
@@ -33,7 +46,6 @@ export class AuthService {
 
       const user = rows[0] as User;
 
-      console.log("Password: " + bcrypt.decodeBase64(user.password_hash!, 10));
       // Verificar contraseña
       const isPasswordValid = await bcrypt.compare(password, user.password_hash!);
       if (!isPasswordValid) {
@@ -211,6 +223,154 @@ export class AuthService {
       return await this.getUserById(decoded.id);
     } catch (error) {
       return null;
+    }
+  }
+
+  async forgotPassword(request: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
+    try {
+      const { identifier } = request;
+
+      // Buscar usuario por username o email
+      const [rows] = await this.db.execute<RowDataPacket[]>(
+        'SELECT id, username, email FROM users WHERE (username = ? OR email = ?) AND is_active = true',
+        [identifier, identifier]
+      );
+
+      if (rows.length === 0) {
+        // Por seguridad, siempre devolvemos el mismo mensaje
+        return {
+          success: true,
+          message: 'Si el usuario existe, se ha enviado un correo con las instrucciones para restablecer la contraseña.'
+        };
+      }
+
+      const user = rows[0] as User;
+
+      // Generar token de recuperación
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+      // Invalidar tokens anteriores del usuario
+      await this.db.execute(
+        'UPDATE password_reset_tokens SET used = true WHERE user_id = ? AND used = false',
+        [user.id]
+      );
+
+      // Crear nuevo token
+      await this.db.execute(
+        'INSERT INTO password_reset_tokens (user_id, token, expires_at, used) VALUES (?, ?, ?, false)',
+        [user.id, resetToken, expiresAt]
+      );
+
+      // Enviar correo de recuperación
+      await this.emailService.sendPasswordResetEmail(user.email, user.username, resetToken);
+
+      return {
+        success: true,
+        message: 'Si el usuario existe, se ha enviado un correo con las instrucciones para restablecer la contraseña.'
+      };
+    } catch (error) {
+      console.error('Error en forgotPassword:', error);
+      return {
+        success: false,
+        message: 'Error interno del servidor. Por favor, intente más tarde.'
+      };
+    }
+  }
+
+  async resetPassword(request: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+    try {
+      const { token, newPassword } = request;
+
+      // Validar longitud de contraseña
+      if (newPassword.length < 8) {
+        return {
+          success: false,
+          message: 'La contraseña debe tener al menos 8 caracteres.'
+        };
+      }
+
+      // Buscar token válido
+      const [tokenRows] = await this.db.execute<RowDataPacket[]>(
+        'SELECT * FROM password_reset_tokens WHERE token = ? AND used = false AND expires_at > NOW()',
+        [token]
+      );
+
+      if (tokenRows.length === 0) {
+        return {
+          success: false,
+          message: 'Token de recuperación inválido o expirado.'
+        };
+      }
+
+      const resetTokenData = tokenRows[0] as PasswordResetToken;
+
+      // Verificar que el usuario existe
+      const [userRows] = await this.db.execute<RowDataPacket[]>(
+        'SELECT id, username, email FROM users WHERE id = ? AND is_active = true',
+        [resetTokenData.user_id]
+      );
+
+      if (userRows.length === 0) {
+        return {
+          success: false,
+          message: 'Usuario no encontrado o inactivo.'
+        };
+      }
+
+      const user = userRows[0] as User;
+
+      // Hash de la nueva contraseña
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Actualizar contraseña
+      await this.db.execute(
+        'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [hashedPassword, user.id]
+      );
+
+      // Marcar token como usado
+      await this.db.execute(
+        'UPDATE password_reset_tokens SET used = true WHERE id = ?',
+        [resetTokenData.id]
+      );
+
+      return {
+        success: true,
+        message: 'Contraseña restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.'
+      };
+    } catch (error) {
+      console.error('Error en resetPassword:', error);
+      return {
+        success: false,
+        message: 'Error interno del servidor. Por favor, intente más tarde.'
+      };
+    }
+  }
+
+  async validateResetToken(token: string): Promise<{ valid: boolean; message?: string }> {
+    try {
+      const [tokenRows] = await this.db.execute<RowDataPacket[]>(
+        'SELECT * FROM password_reset_tokens WHERE token = ? AND used = false AND expires_at > NOW()',
+        [token]
+      );
+
+      if (tokenRows.length === 0) {
+        return {
+          valid: false,
+          message: 'Token de recuperación inválido o expirado.'
+        };
+      }
+
+      return {
+        valid: true
+      };
+    } catch (error) {
+      console.error('Error en validateResetToken:', error);
+      return {
+        valid: false,
+        message: 'Error interno del servidor.'
+      };
     }
   }
 }

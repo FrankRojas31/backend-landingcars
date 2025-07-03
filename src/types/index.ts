@@ -54,6 +54,34 @@ export interface LoginResponse {
   message?: string;
 }
 
+export interface ForgotPasswordRequest {
+  identifier: string; // username o email
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface PasswordResetToken {
+  id?: number;
+  user_id: number;
+  token: string;
+  expires_at: Date;
+  used: boolean;
+  created_at?: Date;
+}
+
 export interface RecaptchaResponse {
   success: boolean;
   challenge_ts?: string;

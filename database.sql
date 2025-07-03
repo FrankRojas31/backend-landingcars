@@ -59,6 +59,17 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Tabla de tokens de recuperación de contraseña
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  expires_at TIMESTAMP NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Índices para optimización
 CREATE INDEX idx_contacts_email ON contacts(email);
 CREATE INDEX idx_contacts_status ON contacts(status);
@@ -68,6 +79,9 @@ CREATE INDEX idx_contact_messages_contact_id ON contact_messages(contact_id);
 CREATE INDEX idx_contact_messages_created_at ON contact_messages(created_at);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens(token);
+CREATE INDEX idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
+CREATE INDEX idx_password_reset_tokens_expires_at ON password_reset_tokens(expires_at);
 
 -- Insertar usuario administrador por defecto
 INSERT INTO users (username, email, password_hash, role) 
