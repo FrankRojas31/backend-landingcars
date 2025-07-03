@@ -22,6 +22,8 @@ export class AuthService {
         [username, username]
       );
 
+      console.log('Rows found:', rows.length);
+
       if (rows.length === 0) {
         return {
           success: false,
