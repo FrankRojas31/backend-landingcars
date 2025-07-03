@@ -9,6 +9,7 @@ import { swaggerSpec } from './config/swagger.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { Logger } from './utils/logger.js';
 import { checkAndCreateTables } from './scripts/checkAndCreateTables.js';
+import { ensurePasswordResetTable } from './utils/ensurePasswordResetTable.js';
 
 // Importar rutas
 import authRoutes from './routes/auth.js';
@@ -35,6 +36,10 @@ class App {
       // Verificar y crear tablas si no existen
       await checkAndCreateTables();
       Logger.success('Esquema de base de datos verificado');
+      
+      // Verificar y crear tabla de tokens de recuperación de contraseña
+      await ensurePasswordResetTable();
+      Logger.success('Tabla de tokens de recuperación verificada');
     } catch (error) {
       Logger.error('Error al inicializar la base de datos:', error);
       process.exit(1);

@@ -12,6 +12,7 @@
     "start:prod": "./start-production.sh",
     "setup-db": "node setup-db.mjs",
     "migrate:password-reset": "tsx src/scripts/migrate-password-reset.ts",
+    "create-password-table": "tsx src/scripts/create-password-reset-table.ts",
     "test:forgot-password": "tsx src/scripts/test-forgot-password.ts",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
