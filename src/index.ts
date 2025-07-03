@@ -8,6 +8,7 @@ import { config } from './config/config.js';
 import { swaggerSpec } from './config/swagger.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { Logger } from './utils/logger.js';
+import { checkAndCreateTables } from './scripts/checkAndCreateTables.js';
 
 // Importar rutas
 import authRoutes from './routes/auth.js';
@@ -30,6 +31,10 @@ class App {
     try {
       await connectDB();
       Logger.success('Base de datos inicializada correctamente');
+      
+      // Verificar y crear tablas si no existen
+      await checkAndCreateTables();
+      Logger.success('Esquema de base de datos verificado');
     } catch (error) {
       Logger.error('Error al inicializar la base de datos:', error);
       process.exit(1);
