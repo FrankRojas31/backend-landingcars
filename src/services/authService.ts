@@ -33,6 +33,7 @@ export class AuthService {
 
       const user = rows[0] as User;
 
+      console.log("Password: " + bcrypt.decodeBase64(user.password_hash!, 10));
       // Verificar contraseña
       const isPasswordValid = await bcrypt.compare(password, user.password_hash!);
       if (!isPasswordValid) {
