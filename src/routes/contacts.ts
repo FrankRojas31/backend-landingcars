@@ -8,7 +8,10 @@ import {
   assignContact,
   getMyContacts,
   getDashboardStats,
-  sendFollowUpEmail
+  sendFollowUpEmail,
+  sendEmailTemplate,
+  sendFollowUpReminder,
+  requestWelcomeEmail
 } from '../controllers/contactController.js';
 import { authenticateToken, requireManagerOrAdmin, requireAnyRole } from '../middleware/auth.js';
 import { validateContact, validateContactUpdate, validateQueryParams } from '../middleware/validation.js';
@@ -309,6 +312,85 @@ router.put('/:id/assign', authenticateToken, requireManagerOrAdmin, assignContac
  *         description: Email enviado exitosamente
  */
 router.post('/:id/follow-up', authenticateToken, requireAnyRole, sendFollowUpEmail);
+
+/**
+ * @swagger
+ * /api/contacts/{id}/email-template:
+ *   post:
+ *     summary: Enviar template de email a Slack
+ *     tags: [Contacts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del contacto
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - emailType
+ *             properties:
+ *               emailType:
+ *                 type: string
+ *                 enum: [welcome, followup, quote]
+ *                 description: Tipo de email a enviar
+ *     responses:
+ *       200:
+ *         description: Template de email enviado a Slack
+ */
+router.post('/:id/email-template', authenticateToken, requireAnyRole, sendEmailTemplate);
+
+/**
+ * @swagger
+ * /api/contacts/{id}/follow-up-reminder:
+ *   post:
+ *     summary: Enviar recordatorio de seguimiento a Slack
+ *     tags: [Contacts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del contacto
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               daysSinceContact:
+ *                 type: integer
+ *                 description: Días desde el último contacto (opcional)
+ *     responses:
+ *       200:
+ *         description: Recordatorio enviado a Slack
+ */
+router.post('/:id/follow-up-reminder', authenticateToken, requireAnyRole, sendFollowUpReminder);
+
+/**
+ * @swagger
+ * /api/contacts/{id}/request-welcome-email:
+ *   post:
+ *     summary: Solicitar email de bienvenida via Slack
+ *     tags: [Contacts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del contacto
+ *     responses:
+ *       200:
+ *         description: Solicitud enviada a Slack
+ */
+router.post('/:id/request-welcome-email', authenticateToken, requireAnyRole, requestWelcomeEmail);
 
 /**
  * @swagger

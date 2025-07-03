@@ -62,13 +62,13 @@ export const createContact = asyncHandler(async (req: Request, res: Response): P
     source: 'landing_page'
   });
 
-  // Enviar notificaciones en paralelo (sin esperar)
+  // Enviar notificaciones a Slack (reemplazando el envío de emails)
   Promise.all([
     slackService.sendContactNotification(contact),
-    emailService.sendWelcomeEmail(contact),
-    emailService.sendInternalNotification(contact)
+    slackService.sendEmailTemplate(contact, 'welcome'), // Template de email para que Slack lo envíe
+    slackService.requestWelcomeEmail(contact) // Solicitud específica de envío de email
   ]).catch(error => {
-    console.error('Error en notificaciones:', error);
+    console.error('Error en notificaciones Slack:', error);
   });
 
   res.status(201).json({
@@ -270,5 +270,87 @@ export const sendFollowUpEmail = asyncHandler(async (req: Request, res: Response
   res.status(200).json({
     success: true,
     message: 'Email de seguimiento enviado exitosamente'
+  } as ApiResponse);
+});
+
+// Endpoint para enviar template de email específico a Slack
+export const sendEmailTemplate = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { slackService, contactService } = getServices();
+  const { id } = req.params;
+  const { emailType } = req.body;
+
+  const contact = await contactService.getContactById(parseInt(id));
+  
+  if (!contact) {
+    res.status(404).json({
+      success: false,
+      error: 'Contacto no encontrado'
+    } as ApiResponse);
+    return;
+  }
+
+  const validEmailTypes = ['welcome', 'followup', 'quote'];
+  if (!validEmailTypes.includes(emailType)) {
+    res.status(400).json({
+      success: false,
+      error: 'Tipo de email inválido. Debe ser: welcome, followup, o quote'
+    } as ApiResponse);
+    return;
+  }
+
+  await slackService.sendEmailTemplate(contact, emailType);
+
+  res.status(200).json({
+    success: true,
+    message: `Template de email ${emailType} enviado a Slack para el contacto ${contact.fullName}`
+  } as ApiResponse);
+});
+
+// Endpoint para enviar recordatorio de seguimiento
+export const sendFollowUpReminder = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { slackService, contactService } = getServices();
+  const { id } = req.params;
+  const { daysSinceContact } = req.body;
+
+  const contact = await contactService.getContactById(parseInt(id));
+  
+  if (!contact) {
+    res.status(404).json({
+      success: false,
+      error: 'Contacto no encontrado'
+    } as ApiResponse);
+    return;
+  }
+
+  const days = daysSinceContact || Math.floor((Date.now() - new Date(contact.created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24));
+
+  await slackService.sendFollowUpReminder(contact, days);
+
+  res.status(200).json({
+    success: true,
+    message: `Recordatorio de seguimiento enviado a Slack para ${contact.fullName}`
+  } as ApiResponse);
+});
+
+// Endpoint para solicitar email de bienvenida específico
+export const requestWelcomeEmail = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { slackService, contactService } = getServices();
+  const { id } = req.params;
+
+  const contact = await contactService.getContactById(parseInt(id));
+  
+  if (!contact) {
+    res.status(404).json({
+      success: false,
+      error: 'Contacto no encontrado'
+    } as ApiResponse);
+    return;
+  }
+
+  await slackService.requestWelcomeEmail(contact);
+
+  res.status(200).json({
+    success: true,
+    message: `Solicitud de email de bienvenida enviada a Slack para ${contact.fullName}`
   } as ApiResponse);
 });
