@@ -14,15 +14,15 @@ import {
   ResetPasswordResponse,
   PasswordResetToken 
 } from '../types/index.js';
-import { EmailService } from './emailService.js';
+import { SlackService } from './slackService.js';
 
 export class AuthService {
   private db: Pool;
-  private emailService: EmailService;
+  private slackService: SlackService;
 
   constructor() {
     this.db = getDB();
-    this.emailService = new EmailService();
+    this.slackService = new SlackService();
   }
 
   async login(credentials: LoginRequest): Promise<LoginResponse> {
@@ -240,7 +240,7 @@ export class AuthService {
         // Por seguridad, siempre devolvemos el mismo mensaje
         return {
           success: true,
-          message: 'Si el usuario existe, se ha enviado un correo con las instrucciones para restablecer la contraseña.'
+          message: 'Si el usuario existe, se ha enviado una notificación a Slack con las instrucciones para restablecer la contraseña.'
         };
       }
 
@@ -262,12 +262,12 @@ export class AuthService {
         [user.id, resetToken, expiresAt]
       );
 
-      // Enviar correo de recuperación
-      await this.emailService.sendPasswordResetEmail(user.email, user.username, resetToken);
+      // Enviar notificación a Slack con el enlace de recuperación
+      await this.slackService.sendPasswordResetNotification(user.email, user.username, resetToken);
 
       return {
         success: true,
-        message: 'Si el usuario existe, se ha enviado un correo con las instrucciones para restablecer la contraseña.'
+        message: 'Si el usuario existe, se ha enviado una notificación a Slack con las instrucciones para restablecer la contraseña.'
       };
     } catch (error) {
       console.error('Error en forgotPassword:', error);

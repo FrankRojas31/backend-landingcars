@@ -206,4 +206,63 @@ export class SlackService {
         return '⚪ Sin definir';
     }
   }
+
+  async sendPasswordResetNotification(username: string, email: string, resetToken: string): Promise<void> {
+    try {
+      if (!config.SLACK_BOT_TOKEN) {
+        console.warn('Slack token no configurado, saltando notificacion de recuperacion');
+        return;
+      }
+
+      const resetUrl = config.FRONTEND_URL + '/reset-password?token=' + resetToken;
+      
+      const message = {
+        channel: config.SLACK_CHANNEL,
+        text: ':lock: Solicitud de Recuperacion de Contraseña',
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `*🔐 Recuperacion de Contraseña - CRM Landing Cars*\n\n*Usuario:* ${username}\n*Email:* ${email}\n*Fecha:* ${new Date().toLocaleString('es-MX')}\n*Expira:* 1 hora`
+            }
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: {
+                  type: 'plain_text',
+                  text: 'Restablecer Contraseña'
+                },
+                url: resetUrl,
+                style: 'primary' as const
+              }
+            ]
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `:warning: *Informacion de Seguridad*\n• Este enlace expira en 1 hora\n• Solo puede usarse una vez\n• Token: \`${resetToken}\``
+            }
+          }
+        ]
+      };
+
+      const result = await this.slack.chat.postMessage(message);
+      
+      if (result.ok) {
+        console.log('Notificacion de recuperacion enviada a Slack para ' + username);
+      } else {
+        console.error('Error al enviar notificacion a Slack:', result.error);
+        throw new Error('Error de Slack: ' + result.error);
+      }
+      
+    } catch (error) {
+      console.error('Error al enviar notificacion de recuperacion a Slack:', error);
+      throw new Error('Error al enviar notificacion de recuperacion de contraseña');
+    }
+  }
 }

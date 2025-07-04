@@ -29,13 +29,6 @@ export const config = {
   SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN || '',
   SLACK_CHANNEL: process.env.SLACK_CHANNEL || '#general',
   
-  // Email
-  EMAIL_HOST: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  EMAIL_PORT: parseInt(process.env.EMAIL_PORT || '587'),
-  EMAIL_USER: process.env.EMAIL_USER || '',
-  EMAIL_PASS: process.env.EMAIL_PASS || '',
-  EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@titanmotors.com',
-  
   // Frontend URL
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3001',
   

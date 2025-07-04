@@ -128,13 +128,6 @@ export interface DashboardStats {
   }[];
 }
 
-export interface EmailConfig {
-  to: string;
-  subject: string;
-  text?: string;
-  html?: string;
-}
-
 export interface SlackMessage {
   channel: string;
   text: string;
