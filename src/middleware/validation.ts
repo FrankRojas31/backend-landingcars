@@ -172,7 +172,6 @@ export const validateQueryParams = (req: Request, res: Response, next: NextFunct
     return;
   }
 
-  // Sobrescribir query params con valores validados
-  req.query = value;
+  Object.assign(req.query, value);
   next();
 };
