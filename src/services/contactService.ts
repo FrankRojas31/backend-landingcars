@@ -54,76 +54,13 @@ export class ContactService {
     }
   }
 
-  async getAllContacts(params: QueryParams): Promise<{ contacts: Contact[], total: number, totalPages: number }> {
+  async getAllContacts(): Promise<Contact[]> {
     try {
-      const {
-        page = 1,
-        limit = config.DEFAULT_PAGE_SIZE,
-        search,
-        status,
-        assigned_to,
-        priority,
-        sortBy = 'created_at',
-        sortOrder = 'DESC'
-      } = params;
-
-      const offset = (page - 1) * limit;
-      
-      // Construir WHERE clause
-      const whereConditions: string[] = [];
-      const whereValues: any[] = [];
-
-      if (search) {
-        whereConditions.push('(c.fullName LIKE ? OR c.email LIKE ? OR c.phone LIKE ? OR c.message LIKE ?)');
-        const searchPattern = `%${search}%`;
-        whereValues.push(searchPattern, searchPattern, searchPattern, searchPattern);
-      }
-
-      if (status) {
-        whereConditions.push('c.status = ?');
-        whereValues.push(status);
-      }
-
-      if (assigned_to) {
-        whereConditions.push('c.assigned_to = ?');
-        whereValues.push(assigned_to);
-      }
-
-      if (priority) {
-        whereConditions.push('c.priority = ?');
-        whereValues.push(priority);
-      }
-
-      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
-
-      // Obtener total de contactos
-      const [countRows] = await this.db.execute<RowDataPacket[]>(
-        `SELECT COUNT(*) as total FROM contacts c ${whereClause}`,
-        whereValues
-      );
-      const total = countRows[0]?.total || 0;
-      const totalPages = Math.ceil(total / limit);
-
-      // Obtener contactos paginados
-      const query = `
-        SELECT c.*, u.username as assigned_username 
-        FROM contacts c 
-        LEFT JOIN users u ON c.assigned_to = u.id 
-        ${whereClause}
-        ORDER BY c.${sortBy} ${sortOrder}
-        LIMIT ? OFFSET ?
-      `;
-
       const [rows] = await this.db.execute<RowDataPacket[]>(
-        query,
-        [...whereValues, limit, offset]
+        'SELECT * FROM contacts ORDER BY created_at DESC'
       );
 
-      return {
-        contacts: rows as Contact[],
-        total,
-        totalPages
-      };
+      return rows as Contact[];
     } catch (error) {
       console.error('Error al obtener contactos:', error);
       throw new Error('Error al obtener la lista de contactos');
