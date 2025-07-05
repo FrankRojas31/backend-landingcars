@@ -77,18 +77,11 @@ export const createContact = asyncHandler(async (req: Request, res: Response): P
 // Endpoints protegidos para el dashboard
 export const getAllContacts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { contactService } = getServices();
-  const params: QueryParams = req.query as any;
-  const result = await contactService.getAllContacts(params);
+  const result = await contactService.getAllContacts();
   
   res.status(200).json({
     success: true,
-    data: result.contacts,
-    pagination: {
-      page: params.page || 1,
-      limit: params.limit || config.DEFAULT_PAGE_SIZE,
-      total: result.total,
-      totalPages: result.totalPages
-    }
+    data: result
   } as ApiResponse<Contact[]>);
 });
 
